@@ -1,0 +1,12 @@
+name: 500_Cities
+title: 500_Cities
+username:
+account: fmcpeake
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 618158
+bundleId: 1767152
+url: https://fmcpeake.shinyapps.io/500_Cities/
+when: 1544993157.69489
+asMultiple: FALSE
+asStatic: FALSE

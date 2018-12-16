@@ -1,0 +1,469 @@
+---
+title: "Final Project"
+author: "Fionnuala McPeake"
+date: "December 13, 2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+Cities500 <- read_csv("500_Cities_CDC.csv")
+```
+
+## Abstract
+This study looks into the possibility of falsely reported data regarding health in the Center for Disease Control and Prevention's (CDC) 500 Cities project, which recorded the diseease and health behavior prevalences in the 500 largest cities in the US. This was done using a Benford analysis. While the data did not follow Benford's Law, evidence of fraud was not found. 
+
+## Introduction
+
+In order to better understand the health conditions of small areas, as well as the behavioral health risks and preventative measures being taken by the inhabitants, the CDC conducted the 500 Cities project. This project surveyed the residents of the 500 most populated cities in the US, and recorded their geographical location down to the census track they inhabit. This is the first project of its type, and the partners of this project decided to conduct it on such a granular scale in the hopes that it will provide information to public health workers and local government such that they can incorporate new policies to create healthier citizens. The survey consisted of 13 chronic diseases, 5 unhealthy behaviors, and 9 preventative practices, and provides both the crude and adjusted prevalence rate for each question asked. As this is a self reported survey about something so private as health, people may be prone to lie. While it may be harder to lie about something as binary as if you have a disease or not, people may be tempted to exaggerate the amount of  exercise they do in a week, or lessen their drinking habits to conform with what is socially acceptable. In order to assess the accuracy of this data, a Benford analysis was run on the variables, and deviations were investigated. 
+
+## Results
+The results of the Benford analyses ran on the variables included in this study did not conform to the expected law. All of the results fell into one of two categories: either the majority of cases fell on the ends of the number line, or the cases fell around some mean, decreasing around it in a semi-symmetrical fashion. 
+
+The variables falling into the first category are the populations of the cities, the prevelance of diabetes, and the prevelance of adults who have had at least 14 consecutive bad mental health days in the past year. A detailed investigation into the results of the population Benford analysis can be found below. Generally, variables falling into this category have the majority of their instances close to a number that is devisable by 10, with the rest of the instances having a leading number plus or minus approximatly three digits in comparison to the mean. This leaves few numbers with a leading digit between 4 and 7, which is contrary to Benfords law. 
+
+Variables falling into the second category follow the same pattern as variables falling into the first category, except their mean is not close to a number divisible by 10, which does not result in a plot with the majority of instances at either end of the number line. Also, the spread around the mean can be rather small, not following the general rule above of being within three digits of the mean. 
+
+Both the adjusted and crude prevelence of the diseases and behaviors have been provided, and all of them have been analyzed using a Benford analysis. For nearly all variables, the mean of the crude and adjusted prevelences was slightly different, as well as the minimum and maximum value, leading to a narrower range for the adjusted numbers. However, the difference between two graphs for the same variable were very similar. For this reason, the results of the Benford analyses run on the adjusted numbers can be found in the appendix rather than the main report, as the crude numbers make for a slightly more interesting analysis. 
+
+### Category One
+
+Below are the three variables that fell into category one- in which the first digits gather at the ends of the number line. 
+
+#### Population
+The population of the cities was the variable that was most expected to follow the Benford distribution. However, the results did not conform as expected. To investigate this, the characteristics of the populations included in the data were explored. Only 9 cities have a distribution above 1 million, with most of them having a leading digit of 1. As this is a small number of observations, it would not have great influence over the results. 
+
+As there are more instances of cities that have a leading digit between 7 and 9, we investigate this further. Three cities have a population in the 800,000s, and two cities have populations in the 900,000. This again is a very small proportion of the data, and indicates that cities with populations in the hundred-thousands do not account for the deviance. This is confirmed by running a Benford analysis on the cities containing over 100,000 people, which conforms fairly well. A Benford analysis on cities with less than 100,000 residents has the majority of data points for the Digits Distribution plot above 60. When put into context of this project, this is logical. Only the 500 largest cities are included in this data set- any city with a small leading digit that was not of a large order of magnitude would be excluded from the study by design. 
+
+
+```{r, echo = FALSE}
+library(benford.analysis)
+library(tidyverse)
+library(esquisse)
+pop <- benford(Cities500$Population2010)
+plot(pop) #Not following benford
+```
+Benford analysis that included all population points. This clearly does not follow Benford's Law, as the points gather at the ends of the number line. 
+
+```{r, echo = FALSE}
+#esquisser(Cities500)
+#sum(Cities500$Population2010 >= 1000000) #Only 9 cities have a population of above 1 million
+#filter(Cities500, Population2010 >= 900000 & Population2010 <= 1000000) #2 cities have a population in the 900,000s
+#filter(Cities500, Population2010 >= 800000 & Population2010 <= 1000000 & Population2010 <= 900000) # 3 Cities have a population in the 800,000s
+```
+
+```{r, echo = FALSE}
+bigpop <- filter(Cities500, Population2010 >= 100000) #274 cities have a population above 100,000
+bigpop.ben <- benford(bigpop$Population2010)
+plot(bigpop.ben) #Follows Benford pretty well for above 100,000
+```
+Benford analysis for cities with a population of 100,000 or more. This fits the Benford analysis much better than for the full data. 
+
+```{r, echo = FALSE}
+smallpop <- filter(Cities500, Population2010 < 100000)
+smallpop.ben <- benford(smallpop$Population2010)
+plot(smallpop.ben) #Cities with small populations don't follow the benford analysis well. Are on the high side. If they were smaller they would probably too small to consider for this study
+```
+Benford analysis for cities with a population less than 100,000. It seems that smaller cities do not follow Benford's Law as well as larger cities, and that this is the source of deviation from the Law for the overall population. 
+
+#### Diabetes
+Here there are 237 cities that have a rate between 10 and 19, and there are 251 cities that have a rate between 6 and 9.9. This accounts for the accumilation of instances on the ends of the number line. 
+```{r, echo = FALSE}
+dm <- benford(Cities500$DIABETES_CrudePrev)
+#filter(Cities500, DIABETES_CrudePrev >= 10 & DIABETES_CrudePrev <= 19) #237 have a rate between 10 and 19
+#filter(Cities500, DIABETES_CrudePrev >= 6 & DIABETES_CrudePrev <= 9.9) #251 have a rate between 6 and 9.9
+#filter(Cities500, DIABETES_CrudePrev > 19) #One place has a rate in the 20s
+#filter(Cities500, DIABETES_CrudePrev >= 2 & DIABETES_CrudePrev < 6) #only 11 places have a rate between 2 and 5.9
+```
+
+```{r, echo = FALSE}
+plot(dm)
+# max(Cities500$DIABETES_CrudePrev) #20.9
+# mean(Cities500$DIABETES_CrudePrev) #9.9
+# min(Cities500$DIABETES_CrudePrev) #4.1
+```
+
+
+#### Bad mental health for at least 2 weeks
+For this variable, there are 424 cities, the vast majority, with a rate between 10 and 19.9. Only 76 cities have a prevelence between 7 and 10 (exclusive). 
+
+```{r, echo = FALSE}
+mh <- benford(Cities500$MHLTH_CrudePrev)
+#filter(Cities500, MHLTH_CrudePrev >= 7 & MHLTH_CrudePrev < 10) #76 places have less than 10
+#filter(Cities500, MHLTH_CrudePrev >= 10 & MHLTH_CrudePrev < 20) #424 have numbers starting with 1
+plot(mh)
+#max(Cities500$MHLTH_CrudePrev) #18.4
+#mean(Cities500$MHLTH_CrudePrev) #12.3
+#min(Cities500$MHLTH_CrudePrev) #7.2
+```
+
+
+### Category Two
+For the majority of variables, the distribution of the prevelences was semi-symmetric. This was shown using arthritis as an example: 
+
+```{r, echo = FALSE}
+ggplot(data = Cities500) +
+  aes(x = ARTHRITIS_CrudePrev) +
+  geom_histogram(bins = 30, fill = "#0c4c8a") +
+  labs(title = "Prevalence of Arthritis",
+    x = "Crude Prevalence",
+    y = "Count") +
+  theme_minimal()
+```
+This shows that the first digits have a semi-symetrical distribution around a particular number. 
+
+The arthritis results are explored in more detail below. As all of the variables falling into "category two" fallow the same pattern explained for arthritis, they have been moved to the appendix. 
+
+#### Arthritis
+Here the maximum prevalence is 36.8, the mean is 22.42, and the minimum value is 9.4. Further investigation shows that 337 cities have a prevelance between 20 and 37, and 159 cities have a prevalence between 10 and 19.9, explaining the results of the Benford analysis. 
+```{r, echo=FALSE}
+arth <- benford(Cities500$ARTHRITIS_CrudePrev)
+plot(arth)
+#max(Cities500$ARTHRITIS_CrudePrev) #maximum prevelence is 36.8
+# mean(Cities500$ARTHRITIS_CrudePrev) #mean is 22.42
+# filter(Cities500, ARTHRITIS_CrudePrev >= 20 & ARTHRITIS_CrudePrev<37) #337 are between 20 and 37
+# filter(Cities500, ARTHRITIS_CrudePrev >= 10 & ARTHRITIS_CrudePrev < 19.9) #159 are between 10 and 19.9
+# min(Cities500$ARTHRITIS_CrudePrev) #min is 9.4
+```
+
+## Discussion
+
+Although the data of this study does not follow Benford's Law, it is not suprising in this situation, and does not indicate fraud. Although the study looks at the prevelance of disease in small areas, all of the participants in the study live in the United States, and while there are variances throughout states and regions that could influence health and behavior, there is a general level of healthcare and risk throughout the country, and the variance of diseases is not as large accross the country as it would be if the study looked accross countries of different privileges. Furthermore, because the study looked at larger cities rather than rural areas, it can be reasonably assumed that there are similar resources available. Because the variance between cities is relatively small, they have prevalences within a small range, leading to consecutive leading numbers. This is seen repeatidly in the results of the Benford analysis, and is consistend with the findings of the investigation into the data. 
+
+If one wanted to look into the possibility of fraud of this health data, they would likely have to verify the results of this project with other studies performed. 
+
+## Appendix
+### Adjusted Prevalences for Variables included in Results
+
+Diabetes
+```{r, echo = FALSE}
+dm.adj <- benford(Cities500$DIABETES_AdjPrev)
+plot(dm.adj)
+# max(Cities500$DIABETES_AdjPrev) #18.2
+# mean(Cities500$DIABETES_AdjPrev) #10.33
+# min(Cities500$DIABETES_AdjPrev) #5.4
+```
+
+Poor mental health
+```{r, echo= FALSE}
+mh.adj <- benford(Cities500$MHLTH_AdjPrev)
+plot(mh.adj)
+# max(Cities500$MHLTH_AdjPrev) #18.4
+# mean(Cities500$MHLTH_AdjPrev) #12.2
+# min(Cities500$MHLTH_AdjPrev) #7.1
+```
+
+
+### Results for other variables
+Arthritis
+```{r, echo = FALSE}
+arth.adj <- benford(Cities500$ARTHRITIS_AdjPrev)
+plot(arth.adj)
+```
+
+Binge drinking crude
+```{r, echo = FALSE}
+drink <- benford(Cities500$BINGE_CrudePrev)
+plot(drink)
+```
+
+Binge drinking adjusted
+```{r, echo = FALSE}
+#max(Cities500$BINGE_CrudePrev) #Max is 25.5
+drink.adj <- benford(Cities500$BINGE_AdjPrev)
+plot(drink.adj)
+#max(Cities500$BINGE_AdjPrev) #Max is 25.4
+```
+
+High blood pressure crude
+```{r, echo = FALSE}
+bp <- benford(Cities500$BPHIGH_CrudePrev)
+plot(bp) 
+```
+
+High blood pressure adjusted
+```{r, echo = FALSE}
+#max(Cities500$BPHIGH_CrudePrev) #Max is 51.7
+bp.adj <- benford(Cities500$BPHIGH_AdjPrev)
+plot(bp.adj)
+#max(Cities500$BPHIGH_AdjPrev) #Max is 47.8
+```
+
+Blood pressure medicine crude
+```{r, echo = FALSE}
+bpmed <- benford(Cities500$BPMED_CrudePrev)
+plot(bpmed)
+max(Cities500$BPMED_CrudePrev) #Max is 82.9
+```
+
+Blood pressure medicine adjusted
+```{r, echo = FALSE}
+bp.adj <- benford(Cities500$BPMED_AdjPrev)
+plot(bp.adj)
+max(Cities500$BPMED_AdjPrev) #Max is 72.1
+```
+
+Cancer crude
+```{r, echo = FALSE}
+cancer <- benford(Cities500$CANCER_CrudePrev)
+plot(cancer)
+```
+
+Cancer adjusted
+```{r, echo = FALSE}
+#max(Cities500$CANCER_CrudePrev) #Max is 9.6
+cancer.adj <- benford(Cities500$CANCER_AdjPrev)
+plot(cancer.adj)
+#max(Cities500$CANCER_AdjPrev) #Max is 6.9
+```
+
+Asthma crude
+```{r, echo = FALSE}
+asthma <- benford(Cities500$CASTHMA_CrudePrev)
+plot(asthma)
+#max(Cities500$CASTHMA_CrudePrev) #Max is 14.6
+#mean(Cities500$CASTHMA_CrudePrev) #Mean is 9.39
+#min(Cities500$CASTHMA_CrudePrev) #Min is 6.7
+```
+
+Asthma adjusted
+```{r, echo = FALSE}
+asthma.adj <- benford(Cities500$CASTHMA_AdjPrev)
+plot(asthma.adj)
+max(Cities500$CASTHMA_AdjPrev) #Max is 14.7
+mean(Cities500$CASTHMA_AdjPrev) #Mean is 9.33
+min(Cities500$CASTHMA_AdjPrev) #Min is 6.6
+```
+
+Coronary heart disease crude
+```{r, echo = FALSE}
+CHD <- benford(Cities500$CHD_CrudePrev)
+plot(CHD)
+#max(Cities500$CHD_CrudePrev) #Max is 10
+#mean(Cities500$CHD_CrudePrev) #5.69
+```
+
+Coronary heart disease adjusted
+```{r, echo = FALSE}
+CHD.adj <- benford(Cities500$CHD_AdjPrev)
+plot(CHD.adj)
+#max(Cities500$CHD_AdjPrev) #Max is 6.9
+#mean(Cities500$CHD_AdjPrev) #5.96
+#esquisser(Cities500) This disease has more of a normal distribution
+```
+
+Medical check up crude
+```{r, echo = FALSE}
+checkup <- benford(Cities500$CHECKUP_CrudePrev)
+plot(checkup)
+# max(Cities500$CHECKUP_CrudePrev) #Max is 82.2
+# mean(Cities500$CHECKUP_CrudePrev) #67.43
+# min(Cities500$CHECKUP_CrudePrev) #47.9
+```
+
+Medical check up adjusted
+```{r, echo = FALSE}
+checkup.adj <- benford(Cities500$CHECKUP_AdjPrev)
+plot(checkup.adj)
+# max(Cities500$CHECKUP_AdjPrev) #Max is 80.9
+# mean(Cities500$CHECKUP_AdjPrev) #67.97
+# min(Cities500$CHECKUP_AdjPrev) #54.8
+```
+
+Cholesterol screening crude
+```{r, echo = FALSE}
+chol <- benford(Cities500$CHOLSCREEN_CrudePrev)
+plot(chol)
+# max(Cities500$CHOLSCREEN_CrudePrev) #83.8
+# mean(Cities500$CHOLSCREEN_CrudePrev)#72.3
+# min(Cities500$CHOLSCREEN_CrudePrev) #47
+```
+
+Cholesterol screening adjusted
+```{r, echo = FALSE}
+chol.adj <- benford(Cities500$CHOLSCREEN_AdjPrev)
+plot(chol.adj)
+# max(Cities500$CHOLSCREEN_AdjPrev) #82.5
+# mean(Cities500$CHOLSCREEN_AdjPrev) #72.83
+# min(Cities500$CHOLSCREEN_AdjPrev) #64.2
+```
+
+Colon screening crude
+```{r}
+col <- benford(Cities500$COLON_SCREEN_CrudePrev)
+plot(col)
+# max(Cities500$COLON_SCREEN_CrudePrev) #76.4
+# mean(Cities500$COLON_SCREEN_CrudePrev) #61.1
+# min(Cities500$COLON_SCREEN_CrudePrev) #43.5
+```
+
+Colon screening adjusted
+```{r, echo = FALSE}
+col.adj <- benford(Cities500$COLON_SCREEN_AdjPrev)
+plot(col.adj)
+# max(Cities500$COLON_SCREEN_AdjPrev) #76.9
+# mean(Cities500$COLON_SCREEN_AdjPrev) #62.6
+# min(Cities500$COLON_SCREEN_AdjPrev) #44.9
+```
+
+Chronic obstructive pulmonary disease crude
+```{r, echo = FALSE}
+pd <- benford(Cities500$COPD_CrudePrev)
+plot(pd)
+# max(Cities500$COPD_CrudePrev) #12
+# mean(Cities500$COPD_CrudePrev) #avg is 6.14
+# min(Cities500$COPD_CrudePrev) #min is 3.2
+```
+
+Chronin obstructive pulmonary disease adjusted
+```{r, echo = FALSE}
+pd.adj <- benford(Cities500$COPD_AdjPrev)
+plot(pd.adj)
+# max(Cities500$COPD_AdjPrev) #11.4
+# mean(Cities500$COPD_AdjPrev) #6.27
+# min(Cities500$COPD_AdjPrev) #3.3
+#esquisser(Cities500)
+```
+
+Currently smoking crude
+```{r, echo = FALSE}
+smoke <- benford(Cities500$CSMOKING_CrudePrev)
+plot(smoke)
+#max(Cities500$CSMOKING_CrudePrev) #30.4
+```
+
+Currently smoking adjusted
+```{r, echo = FALSE}
+smoke.adj <- benford(Cities500$CSMOKING_AdjPrev)
+plot(smoke.adj)
+#max(Cities500$CSMOKING_AdjPrev) #31.4
+```
+
+Going to the dentist crude
+```{r, echo = FALSE}
+dent <- benford(Cities500$DENTAL_CrudePrev)
+plot(dent)
+# max(Cities500$DENTAL_CrudePrev) #80.1
+# mean(Cities500$DENTAL_CrudePrev) #61.96
+# min(Cities500$DENTAL_CrudePrev) #39.4
+```
+
+Going to the dentist adjusted
+```{r, echo = FALSE}
+dent.adj <- benford(Cities500$DENTAL_AdjPrev)
+plot(dent.adj)
+# max(Cities500$DENTAL_AdjPrev) #79.7
+# mean(Cities500$DENTAL_AdjPrev) #62
+# min(Cities500$DENTAL_AdjPrev) #38.8
+```
+
+Binge Drinking crude
+```{r, echo = FALSE}
+drink <- benford(Cities500$HIGHCHOL_CrudePrev)
+plot(drink)
+# max(Cities500$HIGHCHOL_CrudePrev) #44.7
+# mean(Cities500$HIGHCHOL_CrudePrev) #36.4
+# min(Cities500$HIGHCHOL_CrudePrev) #24.8
+```
+
+High blood pressure adjusted
+```{r, echo = FALSE}
+drink.adj <- benford(Cities500$BPHIGH_AdjPrev)
+plot(drink.adj)
+# max(Cities500$BPHIGH_AdjPrev) #47.8
+# mean(Cities500$BPHIGH_AdjPrev) #10.8
+# min(Cities500$BPHIGH_AdjPrev) #22.5
+```
+
+Chronic kidney disease crude
+```{r, echo = FALSE}
+kidney <- benford(Cities500$KIDNEY_CrudePrev)
+plot(kidney)
+# max(Cities500$KIDNEY_CrudePrev) #4.6
+# mean(Cities500$KIDNEY_CrudePrev) #2.68
+# min(Cities500$KIDNEY_CrudePrev) #1.6
+```
+
+Chronic kidney disease adjusted
+```{r, echo = FALSE}
+kidney.adj <- benford(Cities500$KIDNEY_AdjPrev)
+plot(kidney.adj)
+# max(Cities500$KIDNEY_AdjPrev) #4.6
+# mean(Cities500$KIDNEY_AdjPrev) #2.78
+# min(Cities500$KIDNEY_AdjPrev) #1.7
+```
+
+No leisure physical activity crude
+```{r, echo = FALSE}
+lpa <- benford(Cities500$LPA_CrudePrev)
+plot(lpa)
+# max(Cities500$LPA_CrudePrev) #39.8
+# mean(Cities500$LPA_CrudePrev) #23.7
+# min(Cities500$LPA_CrudePrev) #10.8
+```
+
+No leisure physical activity adjusted
+```{r, echo = FALSE}
+lpa.adj <- benford(Cities500$LPA_AdjPrev)
+plot(lpa.adj)
+# max(Cities500$LPA_AdjPrev) #41.6
+# mean(Cities500$LPA_AdjPrev) #24.04
+# min(Cities500$LPA_AdjPrev) #11.6
+```
+
+Mammogram use for women 50-74 crude
+```{r, echo = FALSE}
+mam <- benford(Cities500$MAMMOUSE_CrudePrev)
+plot(mam)
+# max(Cities500$MAMMOUSE_CrudePrev) #84.6
+# mean(Cities500$MAMMOUSE_CrudePrev) #75.28
+# min(Cities500$MAMMOUSE_CrudePrev) #62.7
+```
+
+Mammogram use for women 50-74 adjusted
+```{r, echo = FALSE}
+mam.adj <- benford(Cities500$MAMMOUSE_AdjPrev)
+plot(mam.adj)
+# max(Cities500$MAMMOUSE_AdjPrev) #88.9
+# mean(Cities500$MAMMOUSE_AdjPrev) #77.8
+# min(Cities500$MAMMOUSE_AdjPrev) #62.8
+```
+
+Obesity crude
+```{r, echo = FALSE}
+ob <- benford(Cities500$OBESITY_CrudePrev)
+plot(ob)
+# max(Cities500$OBESITY_CrudePrev) #38.8
+# mean(Cities500$OBESITY_CrudePrev) #23.4
+# min(Cities500$OBESITY_CrudePrev) #12.2
+```
+
+Obesity adjusted
+```{r, echo = FALSE}
+ob.adj <- benford(Cities500$OBESITY_AdjPrev)
+plot(ob.adj)
+max(Cities500$OBESITY_AdjPrev) #47.2
+mean(Cities500$OBESITY_AdjPrev) #29.2
+min(Cities500$OBESITY_AdjPrev) #15.2
+```
+
+Pap smear for women 21-65 crude
+```{r, echo = FALSE}
+pap <- benford(Cities500$PAPTEST_CrudePrev)
+plot(pap)
+# max(Cities500$PAPTEST_CrudePrev) #87.5
+# mean(Cities500$PAPTEST_CrudePrev) #79.5
+# min(Cities500$PAPTEST_CrudePrev) #62.5
+```
+
+Pap smear for women 21-65 adjusted
+```{r, echo = FALSE}
+pap.adj <- benford(Cities500$PAPTEST_AdjPrev)
+plot(pap.adj)
+max(Cities500$PAPTEST_AdjPrev) #89.4
+mean(Cities500$PAPTEST_AdjPrev) #80.6
+min(Cities500$PAPTEST_AdjPrev) #69.3
+```
